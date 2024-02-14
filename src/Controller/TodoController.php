@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Todo;
+use App\Form\ChekboxType;
+use App\Form\DoneType;
 use App\Form\TodoType;
 use App\Repository\TodoRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,10 +18,17 @@ use Symfony\Component\Routing\Annotation\Route;
 class TodoController extends AbstractController
 {
     /**
-     * @Route("/", name="app_todo_index", methods={"GET"})
+     * @Route("/", name="app_todo_index", methods={"GET", "POST"})
      */
     public function index(TodoRepository $todoRepository, Request $request): Response
     {
+        $form = $this->createForm(DoneType::class);
+        $form->handleRequest($request);
+        $check = 0;
+        if($form->isSubmitted() && $form->isValid()){
+            $check = $form->get('done')->getData();
+        }
+
         $orderby = $request->query->get('orderby') ?? "name";
         $order = $request->query->get('order') ?? "ASC";
         if($order === "ASC") {
@@ -28,9 +37,11 @@ class TodoController extends AbstractController
         else {
             $order = "ASC";
         }
+        
         return $this->render('todo/index.html.twig', [
             'order' => $order,
-            'todos' => $todoRepository->findAllOrdered($order, $orderby),
+            'todos' => $todoRepository->findAllOrdered($order, $orderby, $check),
+            'form' => $form->createView(),
         ]);
     }
 

@@ -5,12 +5,19 @@
 {% block body %}
     <h1>Todo index</h1>
 
+    <div>
+        {{form_start(form)}}
+            {{form_row(form.done)}}
+            <input type="submit" name="button" value="Envoyer">
+        {{form_end(form)}}
+    </div>
     <table class="table">
         <thead>
             <tr>
                 <th><a href="/todo?orderby=id&order={{order}}">ID</a></th>
                 <th><a href="/todo?orderby=name&order={{order}}">Name</a></th>
                 <th>Description</th>
+                <th>Status</th>
                 <th>actions</th>
             </tr>
         </thead>
@@ -20,6 +27,7 @@
                 <td>{{ todo.id }}</td>
                 <td>{{ todo.name }}</td>
                 <td>{{ todo.description }}</td>
+                <td>{{ todo.done }}</td>
                 <td>
                     <a href="{{ path('app_todo_show', {'id': todo.id}) }}">Voir</a>
                     <a href="{{ path('app_todo_edit', {'id': todo.id}) }}">Modifier</a>

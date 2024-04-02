@@ -4,7 +4,9 @@
 
 {% block body %}
     <h1>Todo index</h1>
-
+    <div>
+        Rechercher : <input type="search" id="search" name="search">
+    </div>
     <div>
         {{form_start(form)}}
             {{form_row(form.done)}}
@@ -23,11 +25,11 @@
         </thead>
         <tbody>
         {% for todo in todos %}
-            <tr>
-                <td>{{ todo.id }}</td>
+            <tr class="line">
+                <td class="id">{{ todo.id }}</td>
                 <td>{{ todo.name }}</td>
                 <td>{{ todo.description }}</td>
-                <td>{{ todo.done }}</td>
+                <td class="done">{% if todo.done == 1 %} Fait {% else %} A faire {% endif %}</td>
                 <td>
                     <a href="{{ path('app_todo_show', {'id': todo.id}) }}">Voir</a>
                     <a href="{{ path('app_todo_edit', {'id': todo.id}) }}">Modifier</a>
@@ -35,7 +37,7 @@
             </tr>
         {% else %}
             <tr>
-                <td colspan="3">no records found</td>
+                <td colspan="3">Aucune données</td>
             </tr>
         {% endfor %}
         </tbody>

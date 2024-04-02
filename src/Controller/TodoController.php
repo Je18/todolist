@@ -7,10 +7,13 @@ use App\Form\ChekboxType;
 use App\Form\DoneType;
 use App\Form\TodoType;
 use App\Repository\TodoRepository;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * @Route("/todo")
@@ -25,19 +28,18 @@ class TodoController extends AbstractController
         $form = $this->createForm(DoneType::class);
         $form->handleRequest($request);
         $check = 0;
-        if($form->isSubmitted() && $form->isValid()){
+        if ($form->isSubmitted() && $form->isValid()) {
             $check = $form->get('done')->getData();
         }
 
         $orderby = $request->query->get('orderby') ?? "name";
         $order = $request->query->get('order') ?? "ASC";
-        if($order === "ASC") {
+        if ($order === "ASC") {
             $order = "DESC";
-        }
-        else {
+        } else {
             $order = "ASC";
         }
-        
+
         return $this->render('todo/index.html.twig', [
             'order' => $order,
             'todos' => $todoRepository->findAllOrdered($order, $orderby, $check),
@@ -98,11 +100,34 @@ class TodoController extends AbstractController
     }
 
     /**
+     * @Route("/update/{id}", name="app_todo_update", methods={"GET"})
+     */
+    public function update(Request $request, Todo $todo, TodoRepository $todoRepository, EntityManagerInterface $em): Response
+    {
+        $todo->setDone(!$todo->isDone());
+        $em->persist($todo);
+        $em->flush();
+        return $this->json(["Status" => "succes", "id" => $todo->getId(), "NewStatus" => $todo->isDone()]);
+    }
+
+    /**
+     * @Route("/search", name="app_todo_search", methods={"POST"})
+     */
+    public function search(Request $request, TodoRepository $todoRepository, SerializerInterface $serializer, EntityManagerInterface $em): Response
+    {
+        $payload = json_decode($request->getContent(), true);
+        $todos = $todoRepository->search($payload['terms']);
+        // $todos = $todoRepository->findAll();
+        $jsonContent = $serializer->serialize($todos, 'json');
+        return new Response($jsonContent);
+    }
+
+    /**
      * @Route("/{id}", name="app_todo_delete", methods={"POST"})
      */
     public function delete(Request $request, Todo $todo, TodoRepository $todoRepository): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$todo->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $todo->getId(), $request->request->get('_token'))) {
             $todoRepository->remove($todo, true);
         }
 
